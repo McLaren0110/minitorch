@@ -68,20 +68,22 @@ def topological_sort(variable: Variable) -> Iterable[Variable]:
     Returns:
         Non-constant Variables in topological order starting from the right.
     """
-    sorted_nodes = []
+    res = []
     visited = set()
 
-    def visit(variable: Variable) -> None:
-        if variable.unique_id in visited:
+    def iter_and_push(root: Variable):
+        if root.is_constant() or root.unique_id in visited:
             return
-        visited.add(variable.unique_id)
-        for parent in variable.parents:
-            visit(parent)
-        if not variable.is_constant():
-            sorted_nodes.append(variable)
 
-    visit(variable)
-    return sorted_nodes[::-1]
+        if not root.is_leaf():
+            for node in root.parents:
+                iter_and_push(node)
+
+        res.append(root)
+        visited.add(root.unique_id)
+
+    iter_and_push(variable)
+    return reversed(res)
 
 
 def backpropagate(variable: Variable, deriv: Any) -> None:

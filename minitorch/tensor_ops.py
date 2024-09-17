@@ -371,8 +371,27 @@ def tensor_reduce(
         a_strides: Strides,
         reduce_dim: int,
     ) -> None:
-        # TODO: Implement for Task 2.3.
-        raise NotImplementedError("Need to implement for Task 2.3")
+        out_size = 1
+        for dim in out_shape:
+            out_size *= dim
+
+        for out_pos in range(out_size):
+            out_index = [0] * len(out_shape)
+            to_index(out_pos, out_shape, out_index)
+
+            a_base_index = [0] * len(a_shape)
+            broadcast_index(out_index, out_shape, a_shape, a_base_index)
+
+            a_base_pos = index_to_position(a_base_index, a_strides)
+            reduction_result = a_storage[a_base_pos]
+
+            for i in range(1, a_shape[reduce_dim]):
+                a_base_index[reduce_dim] = i
+                a_next_pos = index_to_position(a_base_index, a_strides)
+                reduction_result = fn(reduction_result, a_storage[a_next_pos])
+
+            out_pos_in_storage = index_to_position(out_index, out_strides)
+            out[out_pos_in_storage] = reduction_result
 
     return _reduce
 
