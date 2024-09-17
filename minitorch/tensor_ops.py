@@ -8,6 +8,7 @@ from typing_extensions import Protocol
 from . import operators
 from .tensor_data import (
     MAX_DIMS,
+    OutIndex,
     broadcast_index,
     index_to_position,
     shape_broadcast,
@@ -20,8 +21,7 @@ if TYPE_CHECKING:
 
 
 class MapProto(Protocol):
-    def __call__(self, x: Tensor, out: Optional[Tensor] = ..., /) -> Tensor:
-        ...
+    def __call__(self, x: Tensor, out: Optional[Tensor] = ..., /) -> Tensor: ...
 
 
 class TensorOps:
@@ -264,8 +264,22 @@ def tensor_map(
         in_shape: Shape,
         in_strides: Strides,
     ) -> None:
-        # TODO: Implement for Task 2.3.
-        raise NotImplementedError('Need to implement for Task 2.3')
+
+        out_size = 1
+        for dim in out_shape:
+            out_size *= dim
+
+        for idx in range(out_size):
+            out_index = [0] * len(out_shape)
+            to_index(idx, out_shape, out_index)
+
+            in_index = [0] * len(in_shape)
+            to_index(idx, in_shape, in_index)
+
+            in_pos = index_to_position(in_index, in_strides)
+            out_pos = index_to_position(out_index, out_strides)
+
+            out[out_pos] = fn(in_storage[in_pos])
 
     return _map
 
@@ -309,8 +323,25 @@ def tensor_zip(
         b_shape: Shape,
         b_strides: Strides,
     ) -> None:
-        # TODO: Implement for Task 2.3.
-        raise NotImplementedError('Need to implement for Task 2.3')
+        out_size = 1
+        for dim in out_shape:
+            out_size *= dim
+
+        for idx in range(out_size):
+            mul_idx = [0] * len(out_shape)
+            to_index(idx, out_shape, mul_idx)
+
+            a_idx = [0] * len(a_shape)
+            broadcast_index(mul_idx, out_shape, a_shape, a_idx)
+
+            b_idx = [0] * len(b_shape)
+            broadcast_index(mul_idx, out_shape, b_shape, b_idx)
+
+            a_pos = index_to_position(a_idx, a_strides)
+            b_pos = index_to_position(b_idx, b_strides)
+            out_pos = index_to_position(mul_idx, out_strides)
+
+            out[out_pos] = fn(a_storage[a_pos], b_storage[b_pos])
 
     return _zip
 
@@ -341,7 +372,7 @@ def tensor_reduce(
         reduce_dim: int,
     ) -> None:
         # TODO: Implement for Task 2.3.
-        raise NotImplementedError('Need to implement for Task 2.3')
+        raise NotImplementedError("Need to implement for Task 2.3")
 
     return _reduce
 

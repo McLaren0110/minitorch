@@ -85,26 +85,16 @@ def broadcast_index(
     Returns:
         None
     """
-    out_pos = -1
-    big_pos = -1
+    dim_offset = len(big_shape) - len(shape)
 
-    for x, y in zip(reversed(big_shape), reversed(shape)):
-        if x == y:
-            out_index[out_pos] = big_index[big_pos]
-        elif y == 1:
-            out_index[out_pos] = 0
-        else:
-            raise ValueError("Invalid shape for broadcasting")
+    for i in range(len(big_shape)):
+        if i >= dim_offset:
+            small_dim = i - dim_offset
+            if shape[small_dim] == 1:
+                out_index[small_dim] = 0
 
-        out_pos -= 1
-        big_pos -= 1
-
-    while big_pos >= -len(big_shape):
-        if big_index[big_pos] != 0:
-            raise ValueError(
-                f"Invalid index {big_index[big_pos]} for broadcast dimensions"
-            )
-        big_pos -= 1
+            else:
+                out_index[small_dim] = big_index[i]
 
 
 def shape_broadcast(shape1: UserShape, shape2: UserShape) -> UserShape:
